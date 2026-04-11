@@ -158,22 +158,7 @@ def fetch_articles(posted):
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-PROMPT = """Ban la chuyen gia tai chinh va chinh tri quoc te voi hon 20 nam kinh nghiem.
-
-Doc bai bao sau va viet lai bang tieng Viet theo dinh dang JSON (chi JSON thuan, khong markdown):
-{
-  "tieu_de": "Tieu de tieng Viet suc tich hap dan toi da 15 tu",
-  "tom_tat": "3-4 cau tom tat: su kien chinh la gi, ai noi/lam gi, so lieu cu the",
-  "phan_tich": "2-3 cau phan tich chuyen sau: tai sao quan trong, tac dong den thi truong Viet Nam va the gioi",
-  "du_bao": "1-2 cau du bao xu huong tiep theo, nha dau tu can chu y dieu gi",
-  "muc_do": "RAT QUAN TRONG hoac QUAN TRONG hoac DANG CHU Y"
-}
-
-Bai bao:
-Tieu de: """ + "{title}" + """
-Nguon: """ + "{source}" + """
-Noi dung: """ + "{content}" + """
-"""
+PROMPT = "Ban la chuyen gia tai chinh va chinh tri quoc te 20 nam kinh nghiem. Doc bai bao va viet lai bang tieng Viet theo JSON (chi JSON thuan, khong markdown, khong giai thich): {{\"tieu_de\": \"tieu de tieng Viet toi da 15 tu\", \"tom_tat\": \"3-4 cau tom tat su kien chinh\", \"phan_tich\": \"2-3 cau phan tich tac dong thi truong\", \"du_bao\": \"1-2 cau du bao xu huong\", \"muc_do\": \"RAT QUAN TRONG hoac QUAN TRONG hoac DANG CHU Y\"}}. Bai bao: Tieu de: {title}. Nguon: {source}. Noi dung: {content}"
 
 def deepseek_analyze(article):
     prompt = PROMPT.format(
