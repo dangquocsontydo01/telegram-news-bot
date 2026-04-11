@@ -116,27 +116,28 @@ def get_market_prices():
             lines.append(f"{label} --")
     try:
         r = requests.get(
-            "https://api-finfo.vndirect.com.vn/v4/indices?code=VNINDEX&fields=code,indexValue,percentChanged",
+            "https://api.allorigins.win/raw?url=https://iboard-query.ssi.com.vn/v2/stock/indices/VNINDEX",
             headers={"User-Agent": "Mozilla/5.0"},
             timeout=10,
         )
-        d = r.json()["data"][0]
+        d = r.json()["data"]
         vni_price = float(d["indexValue"])
-        vni_chg = float(d["percentChanged"])
+        vni_chg = float(d["percentChange"])
         lines.append(f"VNI {vni_price:,.2f} {chg(vni_chg)}")
     except:
         try:
             r = requests.get(
-                "https://banggia.vcbs.com.vn/Home/ChiSo",
+                "https://fwtapi3.fialda.com/api/services/app/MarketBrief/GetMarketBrief",
                 headers={"User-Agent": "Mozilla/5.0"},
                 timeout=10,
             )
-            import re as re2
-            match = re2.search(r"VNINDEX.*?([\d,]+\.?\d*)\s*([-+]?\d+\.?\d*%)", r.text)
-            if match:
-                lines.append(f"VNI {match.group(1)} {match.group(2)}")
-            else:
-                lines.append("VNI --")
+            items = r.json()["result"]["stockIndexes"]
+            for item in items:
+                if item["code"] == "VNINDEX":
+                    vni_price = float(item["indexValue"])
+                    vni_chg = float(item["percentChange"])
+                    lines.append(f"VNI {vni_price:,.2f} {chg(vni_chg)}")
+                    break
         except:
             lines.append("VNI --")
     return "  |  ".join(lines)
