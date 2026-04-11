@@ -114,32 +114,39 @@ def get_market_prices():
             lines.append(f"{label} {fmt} {chg(change)}")
         except:
             lines.append(f"{label} --")
+    # VNINDEX
     try:
         r = requests.get(
-            "https://api.allorigins.win/raw?url=https://iboard-query.ssi.com.vn/v2/stock/indices/VNINDEX",
+            "https://query1.finance.yahoo.com/v8/finance/chart/%5EVNINDEX",
+            params={"interval": "1d", "range": "2d"},
             headers={"User-Agent": "Mozilla/5.0"},
             timeout=10,
         )
-        d = r.json()["data"]
-        vni_price = float(d["indexValue"])
-        vni_chg = float(d["percentChange"])
-        lines.append(f"VNI {vni_price:,.2f} {chg(vni_chg)}")
+        res = r.json()["chart"]["result"][0]
+        closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
+        price = closes[-1]
+        prev  = closes[-2] if len(closes) > 1 else price
+        change = ((price - prev) / prev) * 100
+        lines.append(f"VNI {price:,.2f} {chg(change)}")
     except:
-        try:
-            r = requests.get(
-                "https://fwtapi3.fialda.com/api/services/app/MarketBrief/GetMarketBrief",
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            items = r.json()["result"]["stockIndexes"]
-            for item in items:
-                if item["code"] == "VNINDEX":
-                    vni_price = float(item["indexValue"])
-                    vni_chg = float(item["percentChange"])
-                    lines.append(f"VNI {vni_price:,.2f} {chg(vni_chg)}")
-                    break
-        except:
-            lines.append("VNI --")
+        lines.append("VNI --")
+
+    # FPT
+    try:
+        r = requests.get(
+            "https://query1.finance.yahoo.com/v8/finance/chart/FPT.VN",
+            params={"interval": "1d", "range": "2d"},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10,
+        )
+        res = r.json()["chart"]["result"][0]
+        closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
+        price = closes[-1]
+        prev  = closes[-2] if len(closes) > 1 else price
+        change = ((price - prev) / prev) * 100
+        lines.append(f"FPT {price:,.0f} {chg(change)}")
+    except:
+        lines.append("FPT --")
     return "  |  ".join(lines)
 
 def fetch_articles(posted):
@@ -184,8 +191,8 @@ PROMPT = """Bạn là CEO của quỹ đầu tư hàng chục nghìn tỷ USD, v
   "asset_tich_cuc": ["asset1", "asset2", "asset3"],
   "asset_tieu_cuc": ["asset1", "asset2", "asset3"],
   "asset_trung_tinh": ["asset1", "asset2"],
-  "kich_ban_1": "Kịch bản lạc quan ngắn hạn 1-2 tuần: điều gì xảy ra và tác động đến giá vàng, BTC, SPX, VNIndex như thế nào",
-  "kich_ban_2": "Kịch bản tiêu cực ngắn hạn 1-2 tuần: điều gì xảy ra và tác động đến giá vàng, BTC, SPX, VNIndex như thế nào",
+  "kich_ban_1": "Kịch bản lạc quan ngắn hạn 1-2 tuần: điều gì xảy ra, tác động đến giá vàng BTC SPX VNIndex như thế nào, kết thúc bằng xác suất xảy ra ví dụ (65%)",
+  "kich_ban_2": "Kịch bản tiêu cực ngắn hạn 1-2 tuần: điều gì xảy ra, tác động đến giá vàng BTC SPX VNIndex như thế nào, kết thúc bằng xác suất xảy ra ví dụ (35%)",
   "goc_nhin": "1-2 câu nhận định chiến lược sắc bén, góc nhìn độc đáo của CEO quỹ đầu tư",
   "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"
 }}
@@ -249,7 +256,7 @@ def format_message(article, analysis):
     msg += "━━━━━━━━━━━━━━━━\n"
     msg += f"<code>{prices}</code>\n"
     msg += "━━━━━━━━━━━━━━━━\n\n"
-    msg += f"{emoji} <b>{tieu_de}</b>\n\n"
+    msg += f"{emoji} <b>{tieu_de.upper()}</b>\n\n"
     msg += f"📌 <b>Sự kiện chính</b>\n{su_kien}\n\n"
     msg += f"🔗 <b>Chuỗi tác động vĩ mô</b>\n<i>{chuoi}</i>\n\n"
     msg += f"📊 <b>Asset chịu tác động</b>\n"
