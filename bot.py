@@ -8,50 +8,66 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN   = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHANNEL = os.environ["TELEGRAM_CHANNEL_ID"]
+DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
 POSTED_FILE      = Path("data/posted.json")
 
-MAX_INTL   = 3
-MAX_VN     = 3
-MAX_CRYPTO = 2
-
-RSS_FEEDS = {
-    "intl": [
-        {"name": "Reuters World",    "url": "https://feeds.reuters.com/reuters/worldNews",           "cat": "🌍 THẾ GIỚI"},
-        {"name": "Reuters Business", "url": "https://feeds.reuters.com/reuters/businessNews",        "cat": "💹 TÀI CHÍNH"},
-        {"name": "BBC World",        "url": "http://feeds.bbci.co.uk/news/world/rss.xml",            "cat": "🌍 THẾ GIỚI"},
-        {"name": "CNBC",             "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "cat": "💹 TÀI CHÍNH"},
-        {"name": "Al Jazeera",       "url": "https://www.aljazeera.com/xml/rss/all.xml",             "cat": "🏛️ CHÍNH TRỊ"},
-        {"name": "AP Top News",      "url": "https://rsshub.app/apnews/topics/ap-top-news",          "cat": "🌍 THẾ GIỚI"},
-        {"name": "Financial Times",  "url": "https://www.ft.com/rss/home",                           "cat": "💹 TÀI CHÍNH"},
-        {"name": "Bloomberg Mkts",   "url": "https://feeds.bloomberg.com/markets/news.rss",          "cat": "💹 TÀI CHÍNH"},
-    ],
-    "vn": [
-        {"name": "VnExpress",  "url": "https://vnexpress.net/rss/kinh-doanh.rss",        "cat": "🇻🇳 VIỆT NAM"},
-        {"name": "Tuoi Tre",   "url": "https://tuoitre.vn/rss/kinh-te.rss",              "cat": "🇻🇳 VIỆT NAM"},
-        {"name": "Dan Tri",    "url": "https://dantri.com.vn/kinh-doanh.rss",            "cat": "🇻🇳 VIỆT NAM"},
-        {"name": "Zing News",  "url": "https://zingnews.vn/kinh-te.rss",                 "cat": "🇻🇳 VIỆT NAM"},
-        {"name": "CafeF",      "url": "https://cafef.vn/rss/thi-truong-chung-khoan.rss", "cat": "📈 CHỨNG KHOÁN"},
-        {"name": "Vietstock",  "url": "https://vietstock.vn/rss/tai-chinh.rss",          "cat": "📈 CHỨNG KHOÁN"},
-    ],
-    "crypto": [
-        {"name": "CoinDesk",        "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",      "cat": "₿ CRYPTO"},
-        {"name": "CoinTelegraph",   "url": "https://cointelegraph.com/rss",                        "cat": "₿ CRYPTO"},
-        {"name": "Decrypt",         "url": "https://decrypt.co/feed",                              "cat": "₿ CRYPTO"},
-        {"name": "Bitcoin Magazine","url": "https://bitcoinmagazine.com/.rss/articles/",           "cat": "₿ CRYPTO"},
-        {"name": "The Block",       "url": "https://www.theblock.co/rss/all",                      "cat": "₿ CRYPTO"},
-    ],
-}
-
-KEYWORDS_EN = [
-    "fed", "federal reserve", "interest rate", "inflation", "gdp", "recession",
-    "war", "sanction", "tariff", "trade", "opec", "oil", "dollar", "euro",
-    "yuan", "stock", "nasdaq", "s&p", "imf", "world bank", "nato", "g7", "g20",
-    "china", "russia", "ukraine", "middle east", "election", "policy",
-    "central bank", "economy", "market", "geopolit",
-    "bitcoin", "btc", "ethereum", "eth", "crypto", "blockchain",
+RSS_FEEDS = [
+    # Trump & Chính trị Mỹ
+    {"name": "Reuters World",  "url": "https://feeds.reuters.com/reuters/worldNews",           "cat": "🏛️ CHÍNH TRỊ"},
+    {"name": "AP Top News",    "url": "https://rsshub.app/apnews/topics/ap-top-news",          "cat": "🏛️ CHÍNH TRỊ"},
+    {"name": "BBC World",      "url": "http://feeds.bbci.co.uk/news/world/rss.xml",            "cat": "🏛️ CHÍNH TRỊ"},
+    # FED & Kinh tế Mỹ
+    {"name": "Reuters Business","url": "https://feeds.reuters.com/reuters/businessNews",       "cat": "💹 FED & KINH TẾ"},
+    {"name": "CNBC",           "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "cat": "💹 FED & KINH TẾ"},
+    {"name": "Bloomberg Mkts", "url": "https://feeds.bloomberg.com/markets/news.rss",          "cat": "💹 FED & KINH TẾ"},
+    {"name": "Financial Times","url": "https://www.ft.com/rss/home",                           "cat": "💹 FED & KINH TẾ"},
+    # Crypto KOLs
+    {"name": "CoinDesk",       "url": "https://www.coindesk.com/arc/outboundfeeds/rss/",       "cat": "₿ CRYPTO"},
+    {"name": "CoinTelegraph",  "url": "https://cointelegraph.com/rss",                         "cat": "₿ CRYPTO"},
+    {"name": "Decrypt",        "url": "https://decrypt.co/feed",                               "cat": "₿ CRYPTO"},
+    {"name": "The Block",      "url": "https://www.theblock.co/rss/all",                       "cat": "₿ CRYPTO"},
+    # Việt Nam - Ngân hàng Nhà nước
+    {"name": "VnExpress",      "url": "https://vnexpress.net/rss/kinh-doanh.rss",              "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "CafeF",          "url": "https://cafef.vn/rss/thi-truong-chung-khoan.rss",       "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "Tuoi Tre",       "url": "https://tuoitre.vn/rss/kinh-te.rss",                    "cat": "🇻🇳 VIỆT NAM"},
 ]
 
-SKIP_KEYWORDS = ["celebrity", "oscar", "grammy", "football", "nfl", "nba"]
+# Từ khoá lọc tin - CHỈ đăng những tin liên quan
+KEYWORDS_TRUMP = [
+    "trump", "donald trump", "white house", "tariff", "trade war",
+    "sanction", "executive order", "mar-a-lago",
+]
+
+KEYWORDS_FED = [
+    "federal reserve", "fed rate", "interest rate", "inflation", "cpi",
+    "jerome powell", "powell", "fomc", "monetary policy", "rate hike",
+    "rate cut", "basis point", "quantitative",
+]
+
+KEYWORDS_KOLS = [
+    "cz", "changpeng zhao", "binance",
+    "elon musk", "elon", "tesla", "spacex",
+    "vitalik", "vitalik buterin", "ethereum",
+    "michael saylor", "saylor", "microstrategy",
+]
+
+KEYWORDS_VN_BANK = [
+    "ngân hàng nhà nước", "thống đốc", "lãi suất", "tỷ giá",
+    "nguyễn thị hồng", "chính sách tiền tệ", "nhnn",
+    "lạm phát", "tín dụng", "dự trữ ngoại hối",
+]
+
+def is_relevant(title: str, summary: str) -> tuple[bool, str]:
+    text = (title + " " + summary).lower()
+    if any(k in text for k in KEYWORDS_TRUMP):
+        return True, "trump"
+    if any(k in text for k in KEYWORDS_FED):
+        return True, "fed"
+    if any(k in text for k in KEYWORDS_KOLS):
+        return True, "kol"
+    if any(k in text for k in KEYWORDS_VN_BANK):
+        return True, "vnbank"
+    return False, ""
 
 def clean_html(text: str) -> str:
     return re.sub(r"<[^>]+>", "", text).strip()
@@ -69,15 +85,13 @@ def save_posted(hashes: set):
 def url_hash(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()[:12]
 
-def fetch_group(feeds: list, posted: set, use_filter: bool, limit: int) -> list:
+def fetch_articles(posted: set) -> list:
     articles = []
-    for feed in feeds:
-        if len(articles) >= limit:
-            break
+    for feed in RSS_FEEDS:
         try:
             logger.info(f"Fetching {feed['name']}...")
             parsed = feedparser.parse(feed["url"])
-            for entry in parsed.entries[:10]:
+            for entry in parsed.entries[:15]:
                 url     = entry.get("link", "").strip()
                 title   = entry.get("title", "").strip()
                 summary = clean_html(entry.get("summary", entry.get("description", "")).strip())
@@ -85,36 +99,102 @@ def fetch_group(feeds: list, posted: set, use_filter: bool, limit: int) -> list:
                     continue
                 if url_hash(url) in posted:
                     continue
-                if use_filter:
-                    text = (title + " " + summary).lower()
-                    if any(k in text for k in SKIP_KEYWORDS):
-                        continue
-                    if not any(k in text for k in KEYWORDS_EN):
-                        continue
+                relevant, topic = is_relevant(title, summary)
+                if not relevant:
+                    continue
                 articles.append({
-                    "url":    url,
-                    "title":  title,
-                    "summary": summary[:400],
-                    "source": feed["name"],
-                    "cat":    feed["cat"],
-                    "hash":   url_hash(url),
+                    "url":     url,
+                    "title":   title,
+                    "summary": summary[:800],
+                    "source":  feed["name"],
+                    "cat":     feed["cat"],
+                    "hash":    url_hash(url),
+                    "topic":   topic,
                 })
-                if len(articles) >= limit:
-                    break
         except Exception as e:
             logger.warning(f"Feed error {feed['name']}: {e}")
+    logger.info(f"Found {len(articles)} relevant articles")
     return articles
+
+DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
+
+PROMPT = """Bạn là chuyên gia tài chính và chính trị quốc tế hàng đầu với 20 năm kinh nghiệm.
+
+Hãy phân tích bài báo sau và viết lại bằng tiếng Việt theo định dạng JSON (chỉ JSON, không markdown):
+{{
+  "tieu_de": "tiêu đề tiếng Việt ngắn gọn súc tích ≤15 từ",
+  "tom_tat": "tóm tắt 3-4 câu: sự kiện chính + số liệu quan trọng + bối cảnh",
+  "phan_tich": "2-3 câu phân tích tác động với góc nhìn chuyên gia: ý nghĩa với thị trường VN/thế giới",
+  "du_bao": "1 câu dự báo ngắn gọn về xu hướng tiếp theo"
+}}
+
+Bài báo:
+Tiêu đề: {title}
+Nguồn: {source}
+Nội dung: {content}
+"""
+
+def deepseek_analyze(article: dict) -> dict | None:
+    prompt = PROMPT.format(
+        title=article["title"],
+        source=article["source"],
+        content=article["summary"][:1500],
+    )
+    try:
+        resp = requests.post(
+            DEEPSEEK_URL,
+            headers={
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "deepseek-chat",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 800,
+                "temperature": 0.7,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"]
+        raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        return json.loads(raw)
+    except Exception as e:
+        logger.warning(f"DeepSeek error: {e}")
+        return None
+
+TOPIC_EMOJI = {
+    "trump":  "🇺🇸 TRUMP",
+    "fed":    "🏦 FED",
+    "kol":    "💬 KOL",
+    "vnbank": "🇻🇳 NHNN",
+}
 
 TG_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-def format_message(article: dict) -> str:
+def format_message(article: dict, analysis: dict) -> str:
     hour   = (datetime.utcnow().hour + 7) % 24
     minute = datetime.utcnow().minute
-    summary = article["summary"][:300] if article["summary"] else ""
+    cat    = TOPIC_EMOJI.get(article["topic"], article["cat"])
+
     return (
-        f"{article['cat']}\n\n"
+        f"{cat}\n\n"
+        f"<b>{analysis.get('tieu_de', article['title'])}</b>\n\n"
+        f"📌 {analysis.get('tom_tat', '')}\n\n"
+        f"📊 <i>{analysis.get('phan_tich', '')}</i>\n\n"
+        f"🔮 {analysis.get('du_bao', '')}\n\n"
+        f"🔗 <a href=\"{article['url']}\">Đọc thêm</a>"
+        f" · 📡 {article['source']} · 🕐 {hour:02d}:{minute:02d} (VN)"
+    ).strip()
+
+def format_fallback(article: dict) -> str:
+    hour   = (datetime.utcnow().hour + 7) % 24
+    minute = datetime.utcnow().minute
+    cat    = TOPIC_EMOJI.get(article["topic"], article["cat"])
+    return (
+        f"{cat}\n\n"
         f"<b>{article['title']}</b>\n\n"
-        f"{summary}\n\n"
+        f"{article['summary'][:300]}\n\n"
         f"🔗 <a href=\"{article['url']}\">Đọc thêm</a>"
         f" · 📡 {article['source']} · 🕐 {hour:02d}:{minute:02d} (VN)"
     ).strip()
@@ -137,22 +217,24 @@ def tg_post(text: str) -> bool:
 
 def main():
     logger.info("Starting bot")
-    posted = load_posted()
+    posted   = load_posted()
+    articles = fetch_articles(posted)
 
-    intl_articles   = fetch_group(RSS_FEEDS["intl"],   posted, use_filter=True,  limit=MAX_INTL)
-    vn_articles     = fetch_group(RSS_FEEDS["vn"],     posted, use_filter=False, limit=MAX_VN)
-    crypto_articles = fetch_group(RSS_FEEDS["crypto"], posted, use_filter=False, limit=MAX_CRYPTO)
-
-    logger.info(f"Intl: {len(intl_articles)} | VN: {len(vn_articles)} | Crypto: {len(crypto_articles)}")
-
-    all_articles = intl_articles + vn_articles + crypto_articles
-
-    if not all_articles:
-        logger.info("No new articles.")
+    if not articles:
+        logger.info("No relevant articles found.")
         return
 
-    for article in all_articles:
-        msg = format_message(article)
+    MAX_POST = int(os.environ.get("MAX_POST", "5"))
+    for article in articles[:MAX_POST]:
+        logger.info(f"Analyzing: {article['title'][:60]}")
+        analysis = deepseek_analyze(article)
+        time.sleep(2)
+
+        if analysis:
+            msg = format_message(article, analysis)
+        else:
+            msg = format_fallback(article)
+
         if tg_post(msg):
             logger.info(f"Posted: [{article['source']}] {article['title'][:50]}")
             posted.add(article["hash"])
