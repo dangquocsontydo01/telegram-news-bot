@@ -180,16 +180,38 @@ TG_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 def format_message(article: dict, analysis: dict) -> str:
     hour   = (datetime.utcnow().hour + 7) % 24
     minute = datetime.utcnow().minute
-    cat    = TOPIC_EMOJI.get(article["topic"], article["cat"])
     muc_do = analysis.get("muc_do", "ĐÁNG CHÚ Ý")
     muc_do_emoji = "🔴" if "RẤT QUAN TRỌNG" in muc_do else "🟡" if "QUAN TRỌNG" in muc_do else "🟢"
+    prices = get_market_prices()
 
     return (
-        f"{cat} {muc_do_emoji} {muc_do}\n\n"
-        f"<b>{analysis.get('tieu_de', article['title'])}</b>\n\n"
-        f"📌 <b>Tóm tắt:</b>\n{analysis.get('tom_tat', '')}\n\n"
-        f"📊 <b>Phân tích chuyên gia:</b>\n<i>{analysis.get('phan_tich', '')}</i>\n\n"
-        f"🔮 <b>Dự báo:</b>\n{analysis.get('du_bao', '')}\n\n"
+        f"⚡ <b>Aura Capital 24/7</b>
+"
+        f"━━━━━━━━━━━━━━━━
+"
+        f"<code>{prices}</code>
+"
+        f"━━━━━━━━━━━━━━━━
+
+"
+        f"{muc_do_emoji} {muc_do}
+
+"
+        f"<b>{analysis.get('tieu_de', article['title'])}</b>
+
+"
+        f"📌 <b>Tóm tắt:</b>
+{analysis.get('tom_tat', '')}
+
+"
+        f"📊 <b>Phân tích chuyên gia:</b>
+<i>{analysis.get('phan_tich', '')}</i>
+
+"
+        f"🔮 <b>Dự báo:</b>
+{analysis.get('du_bao', '')}
+
+"
         f"🔗 <a href=\"{article['url']}\">Đọc bài gốc</a>"
         f" · 📡 {article['source']} · 🕐 {hour:02d}:{minute:02d} (VN)"
     ).strip()
