@@ -1,0 +1,75 @@
+name: Telegram News Bot
+
+on:
+  schedule:
+    # Tất cả giờ theo UTC. Vietnam = UTC+7
+    - cron: '0 0 * * *'   # 07:00 VN — Digest sáng
+    - cron: '0 5 * * *'   # 12:00 VN — Flash news trưa
+    - cron: '0 8 * * *'   # 15:00 VN — Flash news chiều
+    - cron: '0 11 * * *'  # 18:00 VN — Digest tối
+    - cron: '0 15 * * *'  # 22:00 VN — Digest đêm
+
+  # Cho phép chạy thủ công từ tab Actions trên GitHub
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'flash'
+        type: choice
+        options:
+          - flash
+          - digest
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # Cần để commit file posted.json
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create data directory
+        run: mkdir -p data
+
+      - name: Determine run mode
+        id: mode
+        run: |
+          # Digest vào 7h, 18h, 22h VN — các giờ còn lại là flash
+          HOUR_UTC=$(date -u +%H)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+          elif [[ "$HOUR_UTC" == "00" || "$HOUR_UTC" == "11" || "$HOUR_UTC" == "15" ]]; then
+            echo "mode=digest" >> $GITHUB_OUTPUT
+          else
+            echo "mode=flash" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RUN_MODE: ${{ steps.mode.outputs.mode }}
+          MAX_POST: '5'
+        run: python bot.py
+
+      - name: Commit posted.json (deduplication)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/posted.json || true
+          git diff --staged --quiet || git commit -m "chore: update posted.json [skip ci]"
+          git push || true
