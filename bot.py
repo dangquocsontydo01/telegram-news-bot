@@ -114,37 +114,25 @@ def get_market_prices():
             lines.append(f"{label} {fmt} {chg(change)}")
         except:
             lines.append(f"{label} --")
-    # VNINDEX từ FireAnt
-    try:
-        r = requests.get(
-            "https://restv2.fireant.vn/symbols/VNINDEX/dashboard",
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Authorization": "Bearer undefined",
-            },
-            timeout=10,
-        )
-        d = r.json()
-        price  = float(d["lastPrice"])
-        change = float(d["percentChange"])
-        lines.append(f"VNI {price:,.2f} {chg(change)}")
-    except:
+    # Cổ phiếu VN: FPT, HPG, MSN, VIC, TCB
+    vn_stocks = ["FPT.VN", "HPG.VN", "MSN.VN", "VIC.VN", "TCB.VN"]
+    labels    = ["FPT", "HPG", "MSN", "VIC", "TCB"]
+    for symbol, label in zip(vn_stocks, labels):
         try:
             r = requests.get(
-                "https://restv2.fireant.vn/symbols/VNINDEX/historical-quotes?startDate=2024-01-01&endDate=2099-01-01&offset=0&limit=2&sort=1",
-                headers={"User-Agent": "Mozilla/5.0", "Authorization": "Bearer undefined"},
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+                params={"interval": "1d", "range": "2d"},
+                headers={"User-Agent": "Mozilla/5.0"},
                 timeout=10,
             )
-            data = r.json()
-            if len(data) >= 2:
-                price  = float(data[0]["priceClose"])
-                prev   = float(data[1]["priceClose"])
-                change = ((price - prev) / prev) * 100
-                lines.append(f"VNI {price:,.2f} {chg(change)}")
-            else:
-                lines.append("VNI --")
+            res = r.json()["chart"]["result"][0]
+            closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
+            price  = closes[-1]
+            prev   = closes[-2] if len(closes) > 1 else price
+            change = ((price - prev) / prev) * 100
+            lines.append(f"{label} {price:,.0f} {chg(change)}")
         except:
-            lines.append("VNI --")
+            lines.append(f"{label} --")
 
     # FPT
     try:
@@ -206,8 +194,8 @@ PROMPT = """Bạn là CEO của quỹ đầu tư hàng chục nghìn tỷ USD, v
   "asset_tich_cuc": ["asset1", "asset2", "asset3"],
   "asset_tieu_cuc": ["asset1", "asset2", "asset3"],
   "asset_trung_tinh": ["asset1", "asset2"],
-  "kich_ban_1": "Kịch bản lạc quan ngắn hạn 1-2 tuần: điều gì xảy ra, tác động đến giá vàng BTC SPX VNIndex như thế nào, kết thúc bằng xác suất xảy ra ví dụ (65%)",
-  "kich_ban_2": "Kịch bản tiêu cực ngắn hạn 1-2 tuần: điều gì xảy ra, tác động đến giá vàng BTC SPX VNIndex như thế nào, kết thúc bằng xác suất xảy ra ví dụ (35%)",
+  "kich_ban_1": "Kịch bản lạc quan 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu ghi xác suất dạng (65%)",
+  "kich_ban_2": "Kịch bản tiêu cực 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu ghi xác suất dạng (35%)",
   "goc_nhin": "1-2 câu nhận định chiến lược sắc bén, góc nhìn độc đáo của CEO quỹ đầu tư",
   "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"
 }}
@@ -278,9 +266,20 @@ def format_message(article, analysis):
     msg += f"Tích cực:\n{tich_str}\n"
     msg += f"Tiêu cực:\n{tieu_str}\n"
     msg += f"Trung tính:\n{trung_str}\n\n"
+    # Tách xác suất ra khỏi nội dung kịch bản
+    import re as _re
+    def extract_prob(text):
+        m = _re.search(r"\((\d+%)\)", text)
+        prob = m.group(1) if m else ""
+        body = _re.sub(r"\(\d+%\)", "", text).strip()
+        return prob, body
+
+    prob1, body1 = extract_prob(kb1)
+    prob2, body2 = extract_prob(kb2)
+
     msg += f"🔮 <b>Kịch bản thị trường</b>\n"
-    msg += f"<b>Kịch bản 1:</b> {kb1}\n"
-    msg += f"<b>Kịch bản 2:</b> {kb2}\n\n"
+    msg += f"<b>Kịch bản 1 ({prob1}):</b> {body1}\n"
+    msg += f"<b>Kịch bản 2 ({prob2}):</b> {body2}\n\n"
     msg += f"🧠 <b>Góc nhìn chiến lược</b>\n<i>{goc}</i>\n\n"
     msg += f"🔗 <a href=\"{url}\">Đọc bài gốc</a> · 📡 {source} · 🕐 {hour:02d}:{minute:02d} (VN)"
     return msg
