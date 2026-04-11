@@ -116,14 +116,29 @@ def get_market_prices():
             lines.append(f"{label} --")
     try:
         r = requests.get(
-            "https://iboard-query.ssi.com.vn/v2/stock/indices/VNINDEX",
+            "https://api-finfo.vndirect.com.vn/v4/indices?code=VNINDEX&fields=code,indexValue,percentChanged",
             headers={"User-Agent": "Mozilla/5.0"},
             timeout=10,
         )
-        d = r.json()["data"]
-        lines.append(f"VNI {float(d['indexValue']):,.2f} {chg(float(d['percentChange']))}")
+        d = r.json()["data"][0]
+        vni_price = float(d["indexValue"])
+        vni_chg = float(d["percentChanged"])
+        lines.append(f"VNI {vni_price:,.2f} {chg(vni_chg)}")
     except:
-        lines.append("VNI --")
+        try:
+            r = requests.get(
+                "https://banggia.vcbs.com.vn/Home/ChiSo",
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=10,
+            )
+            import re as re2
+            match = re2.search(r"VNINDEX.*?([\d,]+\.?\d*)\s*([-+]?\d+\.?\d*%)", r.text)
+            if match:
+                lines.append(f"VNI {match.group(1)} {match.group(2)}")
+            else:
+                lines.append("VNI --")
+        except:
+            lines.append("VNI --")
     return "  |  ".join(lines)
 
 def fetch_articles(posted):
@@ -158,7 +173,15 @@ def fetch_articles(posted):
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-PROMPT = "Ban la chuyen gia tai chinh va chinh tri quoc te 20 nam kinh nghiem. Doc bai bao va viet lai bang tieng Viet theo JSON (chi JSON thuan, khong markdown, khong giai thich): {{\"tieu_de\": \"tieu de tieng Viet toi da 15 tu\", \"tom_tat\": \"3-4 cau tom tat su kien chinh\", \"phan_tich\": \"2-3 cau phan tich tac dong thi truong\", \"du_bao\": \"1-2 cau du bao xu huong\", \"muc_do\": \"RAT QUAN TRONG hoac QUAN TRONG hoac DANG CHU Y\"}}. Bai bao: Tieu de: {title}. Nguon: {source}. Noi dung: {content}"
+PROMPT = """Bạn là chuyên gia tài chính và chính trị quốc tế với hơn 20 năm kinh nghiệm phân tích thị trường toàn cầu.
+
+Đọc bài báo sau và viết lại hoàn toàn bằng tiếng Việt có dấu đầy đủ, theo định dạng JSON (chỉ JSON thuần, không markdown, không giải thích):
+{{"tieu_de": "Tiêu đề tiếng Việt súc tích hấp dẫn tối đa 15 từ", "tom_tat": "3-4 câu tóm tắt: sự kiện chính là gì, ai nói hoặc làm gì, số liệu cụ thể nếu có", "phan_tich": "2-3 câu phân tích chuyên sâu: tại sao sự kiện này quan trọng, tác động đến thị trường Việt Nam và thế giới như thế nào", "du_bao": "Dự báo ngắn hạn (1-2 tuần tới) với góc nhìn chuyên gia: Vàng sẽ tăng hay giảm và tại sao? Chứng khoán (VNIndex, SPX) sẽ phản ứng như thế nào? Bitcoin sẽ tăng hay giảm? Đưa ra mức giá hoặc % cụ thể nếu có thể", "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"}}
+
+Bài báo:
+Tiêu đề: {title}
+Nguồn: {source}
+Nội dung: {content}"""
 
 def deepseek_analyze(article):
     prompt = PROMPT.format(
@@ -205,12 +228,11 @@ def format_message(article, analysis):
     msg += "━━━━━━━━━━━━━━━━\n"
     msg += f"<code>{prices}</code>\n"
     msg += "━━━━━━━━━━━━━━━━\n\n"
-    msg += f"{emoji} {muc_do}\n\n"
-    msg += f"<b>{tieu_de}</b>\n\n"
-    msg += f"📌 <b>Tom tat:</b>\n{tom_tat}\n\n"
-    msg += f"📊 <b>Phan tich chuyen gia:</b>\n<i>{phan_tich}</i>\n\n"
-    msg += f"🔮 <b>Du bao:</b>\n{du_bao}\n\n"
-    msg += f"🔗 <a href=\"{url}\">Doc bai goc</a> · 📡 {source} · 🕐 {hour:02d}:{minute:02d} (VN)"
+    msg += f"{emoji} <b>{tieu_de}</b>\n\n"
+    msg += f"📌 <b>Tóm tắt:</b>\n{tom_tat}\n\n"
+    msg += f"📊 <b>Phân tích chuyên gia:</b>\n<i>{phan_tich}</i>\n\n"
+    msg += f"🔮 <b>Dự báo thị trường:</b>\n{du_bao}\n\n"
+    msg += f"🔗 <a href=\"{url}\">Đọc bài gốc</a> · 📡 {source} · 🕐 {hour:02d}:{minute:02d} (VN)"
     return msg
 
 def format_fallback(article):
