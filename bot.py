@@ -25,7 +25,7 @@ TELEGRAM_TOKEN  = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHANNEL = os.environ["TELEGRAM_CHANNEL_ID"]
 GEMINI_API_KEY  = os.environ["GEMINI_API_KEY"]
 POSTED_FILE     = Path("data/posted.json")
-MAX_POST        = int(os.environ.get("MAX_POST", "6"))
+MAX_POST        = int(os.environ.get("MAX_POST", "3"))
 
 RSS_FEEDS = [
     {"name": "Reuters World",    "url": "https://feeds.reuters.com/reuters/worldNews",    "cat": "🌍 THẾ GIỚI"},
@@ -144,6 +144,7 @@ def gemini_summarize(article: dict) -> dict | None:
         raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         return json.loads(raw)
     except Exception as e:
+        time.sleep(5)
         logger.warning(f"Gemini error for '{article['title'][:50]}': {e}")
         return None
 
