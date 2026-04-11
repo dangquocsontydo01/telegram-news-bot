@@ -144,7 +144,7 @@ def gemini_summarize(article: dict) -> dict | None:
         raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         return json.loads(raw)
     except Exception as e:
-        time.sleep(5)
+        import time; time.sleep(5)
         logger.warning(f"Gemini error for '{article['title'][:50]}': {e}")
         return None
 
