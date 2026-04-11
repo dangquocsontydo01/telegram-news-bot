@@ -134,22 +134,7 @@ def get_market_prices():
         except:
             lines.append(f"{label} --")
 
-    # FPT
-    try:
-        r = requests.get(
-            "https://query1.finance.yahoo.com/v8/finance/chart/FPT.VN",
-            params={"interval": "1d", "range": "2d"},
-            headers={"User-Agent": "Mozilla/5.0"},
-            timeout=10,
-        )
-        res = r.json()["chart"]["result"][0]
-        closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
-        price = closes[-1]
-        prev  = closes[-2] if len(closes) > 1 else price
-        change = ((price - prev) / prev) * 100
-        lines.append(f"FPT {price:,.0f} {chg(change)}")
-    except:
-        lines.append("FPT --")
+
     return "  |  ".join(lines)
 
 def fetch_articles(posted):
