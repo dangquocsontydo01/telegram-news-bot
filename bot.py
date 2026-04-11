@@ -45,6 +45,13 @@ KEYWORDS = [
     "election", "policy", "central bank", "economy", "market", "geopolit",
 ]
 
+KEYWORDS_VI = [
+    "kinh tế", "tài chính", "chứng khoán", "lãi suất", "lạm phát",
+    "ngân hàng", "đầu tư", "thị trường", "cổ phiếu", "vnindex",
+    "gdp", "xuất khẩu", "nhập khẩu", "doanh nghiệp", "fed",
+    "tỷ giá", "usd", "vàng", "bất động sản", "crypto",
+]
+
 SKIP_KEYWORDS = ["celebrity", "oscar", "grammy", "sport", "football", "nfl", "nba"]
 
 def load_posted() -> set:
@@ -77,7 +84,7 @@ def fetch_articles(posted: set) -> list:
                 text = (title + " " + summary).lower()
                 if any(k in text for k in SKIP_KEYWORDS):
                     continue
-                if not any(k in text for k in KEYWORDS):
+                if not any(k in text for k in KEYWORDS) and not any(k in text for k in KEYWORDS_VI):
                     continue
                 articles.append({
                     "url":     url,
