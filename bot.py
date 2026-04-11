@@ -114,22 +114,37 @@ def get_market_prices():
             lines.append(f"{label} {fmt} {chg(change)}")
         except:
             lines.append(f"{label} --")
-    # VNINDEX
+    # VNINDEX từ FireAnt
     try:
         r = requests.get(
-            "https://query1.finance.yahoo.com/v8/finance/chart/%5EVNINDEX",
-            params={"interval": "1d", "range": "2d"},
-            headers={"User-Agent": "Mozilla/5.0"},
+            "https://restv2.fireant.vn/symbols/VNINDEX/dashboard",
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Authorization": "Bearer undefined",
+            },
             timeout=10,
         )
-        res = r.json()["chart"]["result"][0]
-        closes = [c for c in res["indicators"]["quote"][0]["close"] if c]
-        price = closes[-1]
-        prev  = closes[-2] if len(closes) > 1 else price
-        change = ((price - prev) / prev) * 100
+        d = r.json()
+        price  = float(d["lastPrice"])
+        change = float(d["percentChange"])
         lines.append(f"VNI {price:,.2f} {chg(change)}")
     except:
-        lines.append("VNI --")
+        try:
+            r = requests.get(
+                "https://restv2.fireant.vn/symbols/VNINDEX/historical-quotes?startDate=2024-01-01&endDate=2099-01-01&offset=0&limit=2&sort=1",
+                headers={"User-Agent": "Mozilla/5.0", "Authorization": "Bearer undefined"},
+                timeout=10,
+            )
+            data = r.json()
+            if len(data) >= 2:
+                price  = float(data[0]["priceClose"])
+                prev   = float(data[1]["priceClose"])
+                change = ((price - prev) / prev) * 100
+                lines.append(f"VNI {price:,.2f} {chg(change)}")
+            else:
+                lines.append("VNI --")
+        except:
+            lines.append("VNI --")
 
     # FPT
     try:
