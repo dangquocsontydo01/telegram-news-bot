@@ -35,18 +35,18 @@ RSS_FEEDS = {
         {"name": "Vietstock",  "url": "https://vietstock.vn/rss/tai-chinh.rss",          "cat": "📈 CHỨNG KHOÁN"},
     ],
     "twitter": [
-        {"name": "Donald Trump",    "url": "https://nitter.privacyredirect.com/realDonaldTrump/rss",  "cat": "🏛️ TRUMP"},
-        {"name": "Elon Musk",       "url": "https://nitter.privacyredirect.com/elonmusk/rss",         "cat": "🐦 ELON MUSK"},
-        {"name": "Jim Cramer",      "url": "https://nitter.privacyredirect.com/jimcramer/rss",        "cat": "🐦 TWITTER"},
-        {"name": "Cathie Wood",     "url": "https://nitter.privacyredirect.com/CathieDWood/rss",     "cat": "🐦 TWITTER"},
-        {"name": "Raoul Pal",       "url": "https://nitter.privacyredirect.com/RaoulGMI/rss",        "cat": "🐦 TWITTER"},
-        {"name": "Michael Saylor",  "url": "https://nitter.privacyredirect.com/saylor/rss",          "cat": "₿ CRYPTO"},
-        {"name": "CZ Binance",      "url": "https://nitter.privacyredirect.com/cz_binance/rss",      "cat": "₿ CRYPTO"},
-        {"name": "Vitalik Buterin", "url": "https://nitter.privacyredirect.com/VitalikButerin/rss",  "cat": "₿ CRYPTO"},
-        {"name": "PlanB",           "url": "https://nitter.privacyredirect.com/100trillionUSD/rss",  "cat": "₿ CRYPTO"},
-        {"name": "Pompliano",       "url": "https://nitter.privacyredirect.com/APompliano/rss",      "cat": "₿ CRYPTO"},
-        {"name": "Altcoin Daily",   "url": "https://nitter.privacyredirect.com/AltcoinDailyio/rss", "cat": "₿ CRYPTO"},
-        {"name": "Willy Woo",       "url": "https://nitter.privacyredirect.com/woonomic/rss",        "cat": "₿ CRYPTO"},
+        {"name": "Donald Trump",    "url": "https://nitter.tiekoetter.com/realDonaldTrump/rss",  "cat": "🏛️ TRUMP"},
+        {"name": "Elon Musk",       "url": "https://nitter.tiekoetter.com/elonmusk/rss",         "cat": "🐦 ELON MUSK"},
+        {"name": "Jim Cramer",      "url": "https://nitter.tiekoetter.com/jimcramer/rss",        "cat": "🐦 TWITTER"},
+        {"name": "Cathie Wood",     "url": "https://nitter.tiekoetter.com/CathieDWood/rss",     "cat": "🐦 TWITTER"},
+        {"name": "Raoul Pal",       "url": "https://nitter.tiekoetter.com/RaoulGMI/rss",        "cat": "🐦 TWITTER"},
+        {"name": "Michael Saylor",  "url": "https://nitter.tiekoetter.com/saylor/rss",          "cat": "₿ CRYPTO"},
+        {"name": "CZ Binance",      "url": "https://nitter.tiekoetter.com/cz_binance/rss",      "cat": "₿ CRYPTO"},
+        {"name": "Vitalik Buterin", "url": "https://nitter.tiekoetter.com/VitalikButerin/rss",  "cat": "₿ CRYPTO"},
+        {"name": "PlanB",           "url": "https://nitter.tiekoetter.com/100trillionUSD/rss",  "cat": "₿ CRYPTO"},
+        {"name": "Pompliano",       "url": "https://nitter.tiekoetter.com/APompliano/rss",      "cat": "₿ CRYPTO"},
+        {"name": "Altcoin Daily",   "url": "https://nitter.tiekoetter.com/AltcoinDailyio/rss", "cat": "₿ CRYPTO"},
+        {"name": "Willy Woo",       "url": "https://nitter.tiekoetter.com/woonomic/rss",        "cat": "₿ CRYPTO"},
     ],
 }
 
@@ -84,7 +84,7 @@ def fetch_group(feeds: list, posted: set, use_filter: bool, limit: int) -> list:
             break
         try:
             logger.info(f"Fetching {feed['name']}...")
-            parsed = feedparser.parse(feed["url"])
+            parsed = feedparser.parse(feed["url"], request_headers={"User-Agent": "Mozilla/5.0"}, agent="Mozilla/5.0")
             for entry in parsed.entries[:10]:
                 url     = entry.get("link", "").strip()
                 title   = entry.get("title", "").strip()
