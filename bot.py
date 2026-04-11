@@ -34,8 +34,10 @@ RSS_FEEDS = [
 
 # Từ khoá lọc tin - CHỈ đăng những tin liên quan
 KEYWORDS_TRUMP = [
-    "trump", "donald trump", "white house", "tariff", "trade war",
-    "sanction", "executive order", "mar-a-lago",
+    "trump said", "trump says", "trump announced", "trump signed",
+    "trump stated", "trump declared", "trump warned", "trump claimed",
+    "donald trump said", "donald trump says", "president trump said",
+    "trump phát biểu", "trump tuyên bố",
 ]
 
 KEYWORDS_FED = [
