@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, json, hashlib, logging, feedparser, requests, time
+import os, json, hashlib, logging, feedparser, requests, time, re
 from datetime import datetime
 from pathlib import Path
 
@@ -71,6 +71,9 @@ def save_posted(hashes: set):
     recent = list(hashes)[-2000:]
     POSTED_FILE.write_text(json.dumps(recent), encoding="utf-8")
 
+def clean_html(text: str) -> str:
+    return re.sub(r"<[^>]+>", "", text).strip()
+
 def url_hash(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()[:12]
 
@@ -115,7 +118,7 @@ TG_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 def format_message(article: dict) -> str:
     hour   = (datetime.utcnow().hour + 7) % 24
     minute = datetime.utcnow().minute
-    summary = article["summary"][:300] if article["summary"] else ""
+    summary = clean_html(article["summary"])[:300] if article["summary"] else ""
     return (
         f"{article['cat']}\n\n"
         f"<b>{article['title']}</b>\n\n"
