@@ -120,17 +120,20 @@ def fetch_articles(posted: set) -> list:
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-PROMPT = """Bạn là chuyên gia tài chính và chính trị quốc tế hàng đầu với 20 năm kinh nghiệm.
+PROMPT = """Bạn là chuyên gia tài chính và chính trị quốc tế với hơn 20 năm kinh nghiệm phân tích thị trường toàn cầu, từng làm việc tại IMF, Goldman Sachs và các tổ chức tài chính hàng đầu thế giới.
 
-Hãy phân tích bài báo sau và viết lại bằng tiếng Việt theo định dạng JSON (chỉ JSON, không markdown):
+Nhiệm vụ: Đọc bài báo bên dưới, hiểu sâu nội dung, rồi viết lại hoàn toàn bằng tiếng Việt với giọng văn của một chuyên gia đang phân tích cho nhà đầu tư Việt Nam.
+
+Trả về JSON (chỉ JSON thuần, không markdown, không giải thích):
 {{
-  "tieu_de": "tiêu đề tiếng Việt ngắn gọn súc tích ≤15 từ",
-  "tom_tat": "tóm tắt 3-4 câu: sự kiện chính + số liệu quan trọng + bối cảnh",
-  "phan_tich": "2-3 câu phân tích tác động với góc nhìn chuyên gia: ý nghĩa với thị trường VN/thế giới",
-  "du_bao": "1 câu dự báo ngắn gọn về xu hướng tiếp theo"
+  "tieu_de": "Tiêu đề tiếng Việt súc tích, hấp dẫn, ≤15 từ, phản ánh đúng nội dung cốt lõi",
+  "tom_tat": "3-4 câu tóm tắt: (1) Sự kiện chính là gì? (2) Ai nói/làm gì? (3) Số liệu cụ thể nếu có. Viết rõ ràng, dễ hiểu cho người Việt",
+  "phan_tich": "2-3 câu phân tích chuyên sâu: Tại sao sự kiện này quan trọng? Tác động đến thị trường tài chính, kinh tế Việt Nam và thế giới như thế nào? Góc nhìn của chuyên gia",
+  "du_bao": "1-2 câu dự báo cụ thể: Xu hướng tiếp theo sẽ ra sao? Nhà đầu tư cần chú ý điều gì?",
+  "muc_do": "QUAN TRỌNG hoặc RẤT QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"
 }}
 
-Bài báo:
+Bài báo cần phân tích:
 Tiêu đề: {title}
 Nguồn: {source}
 Nội dung: {content}
@@ -178,14 +181,16 @@ def format_message(article: dict, analysis: dict) -> str:
     hour   = (datetime.utcnow().hour + 7) % 24
     minute = datetime.utcnow().minute
     cat    = TOPIC_EMOJI.get(article["topic"], article["cat"])
+    muc_do = analysis.get("muc_do", "ĐÁNG CHÚ Ý")
+    muc_do_emoji = "🔴" if "RẤT QUAN TRỌNG" in muc_do else "🟡" if "QUAN TRỌNG" in muc_do else "🟢"
 
     return (
-        f"{cat}\n\n"
+        f"{cat} {muc_do_emoji} {muc_do}\n\n"
         f"<b>{analysis.get('tieu_de', article['title'])}</b>\n\n"
-        f"📌 {analysis.get('tom_tat', '')}\n\n"
-        f"📊 <i>{analysis.get('phan_tich', '')}</i>\n\n"
-        f"🔮 {analysis.get('du_bao', '')}\n\n"
-        f"🔗 <a href=\"{article['url']}\">Đọc thêm</a>"
+        f"📌 <b>Tóm tắt:</b>\n{analysis.get('tom_tat', '')}\n\n"
+        f"📊 <b>Phân tích chuyên gia:</b>\n<i>{analysis.get('phan_tich', '')}</i>\n\n"
+        f"🔮 <b>Dự báo:</b>\n{analysis.get('du_bao', '')}\n\n"
+        f"🔗 <a href=\"{article['url']}\">Đọc bài gốc</a>"
         f" · 📡 {article['source']} · 🕐 {hour:02d}:{minute:02d} (VN)"
     ).strip()
 
