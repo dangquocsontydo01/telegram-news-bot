@@ -174,10 +174,21 @@ def fetch_articles(posted):
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
-PROMPT = """Bạn là chuyên gia tài chính và chính trị quốc tế với hơn 20 năm kinh nghiệm phân tích thị trường toàn cầu.
+PROMPT = """Bạn là CEO của quỹ đầu tư hàng chục nghìn tỷ USD, với hơn 20 năm kinh nghiệm phân tích vĩ mô toàn cầu. Bạn đọc tin tức và viết bản phân tích ngắn gọn, sắc bén cho các nhà đầu tư của quỹ.
 
-Đọc bài báo sau và viết lại hoàn toàn bằng tiếng Việt có dấu đầy đủ, theo định dạng JSON (chỉ JSON thuần, không markdown, không giải thích):
-{{"tieu_de": "Tiêu đề tiếng Việt súc tích hấp dẫn tối đa 15 từ", "tom_tat": "3-4 câu tóm tắt: sự kiện chính là gì, ai nói hoặc làm gì, số liệu cụ thể nếu có", "phan_tich": "2-3 câu phân tích chuyên sâu: tại sao sự kiện này quan trọng, tác động đến thị trường Việt Nam và thế giới như thế nào", "du_bao": "Dự báo ngắn hạn (1-2 tuần tới) với góc nhìn chuyên gia: Vàng sẽ tăng hay giảm và tại sao? Chứng khoán (VNIndex, SPX) sẽ phản ứng như thế nào? Bitcoin sẽ tăng hay giảm? Đưa ra mức giá hoặc % cụ thể nếu có thể", "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"}}
+Đọc bài báo sau và trả về JSON (chỉ JSON thuần, không markdown, không giải thích):
+{{
+  "tieu_de": "Tiêu đề tiếng Việt súc tích tối đa 15 từ",
+  "su_kien": "1-2 câu mô tả sự kiện chính, số liệu cụ thể nếu có",
+  "chuoi_tac_dong": "Viết chuỗi nhân quả vĩ mô theo dạng: A → B → C → D (ví dụ: Căng thẳng Trung Đông → giá dầu tăng → lạm phát tăng → Fed giữ lãi suất cao → cổ phiếu chịu áp lực)",
+  "asset_tich_cuc": ["asset1", "asset2", "asset3"],
+  "asset_tieu_cuc": ["asset1", "asset2", "asset3"],
+  "asset_trung_tinh": ["asset1", "asset2"],
+  "kich_ban_1": "Kịch bản lạc quan ngắn hạn 1-2 tuần: điều gì xảy ra và tác động đến giá vàng, BTC, SPX, VNIndex như thế nào",
+  "kich_ban_2": "Kịch bản tiêu cực ngắn hạn 1-2 tuần: điều gì xảy ra và tác động đến giá vàng, BTC, SPX, VNIndex như thế nào",
+  "goc_nhin": "1-2 câu nhận định chiến lược sắc bén, góc nhìn độc đáo của CEO quỹ đầu tư",
+  "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"
+}}
 
 Bài báo:
 Tiêu đề: {title}
@@ -210,29 +221,45 @@ TG_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 def format_message(article, analysis):
     hour   = (datetime.utcnow().hour + 7) % 24
     minute = datetime.utcnow().minute
-    muc_do = analysis.get("muc_do", "DANG CHU Y")
-    if "RAT QUAN TRONG" in muc_do:
+    muc_do = analysis.get("muc_do", "ĐÁNG CHÚ Ý")
+    if "RẤT QUAN TRỌNG" in muc_do or "RAT QUAN TRONG" in muc_do:
         emoji = "🔴"
-    elif "QUAN TRONG" in muc_do:
+    elif "QUAN TRỌNG" in muc_do or "QUAN TRONG" in muc_do:
         emoji = "🟡"
     else:
         emoji = "🟢"
-    prices = get_market_prices()
-    tieu_de  = analysis.get("tieu_de", article["title"])
-    tom_tat  = analysis.get("tom_tat", "")
-    phan_tich= analysis.get("phan_tich", "")
-    du_bao   = analysis.get("du_bao", "")
-    url      = article["url"]
-    source   = article["source"]
+    prices  = get_market_prices()
+    tieu_de = analysis.get("tieu_de", article["title"])
+    su_kien = analysis.get("su_kien", "")
+    chuoi   = analysis.get("chuoi_tac_dong", "")
+    tich    = analysis.get("asset_tich_cuc", [])
+    tieu    = analysis.get("asset_tieu_cuc", [])
+    trung   = analysis.get("asset_trung_tinh", [])
+    kb1     = analysis.get("kich_ban_1", "")
+    kb2     = analysis.get("kich_ban_2", "")
+    goc     = analysis.get("goc_nhin", "")
+    url     = article["url"]
+    source  = article["source"]
+
+    tich_str  = "\n".join([f"  • {a}" for a in tich])  if tich  else "  • --"
+    tieu_str  = "\n".join([f"  • {a}" for a in tieu])  if tieu  else "  • --"
+    trung_str = "\n".join([f"  • {a}" for a in trung]) if trung else "  • --"
 
     msg  = "⚡ <b>Aura Capital 24/7</b>\n"
     msg += "━━━━━━━━━━━━━━━━\n"
     msg += f"<code>{prices}</code>\n"
     msg += "━━━━━━━━━━━━━━━━\n\n"
     msg += f"{emoji} <b>{tieu_de}</b>\n\n"
-    msg += f"📌 <b>Tóm tắt:</b>\n{tom_tat}\n\n"
-    msg += f"📊 <b>Phân tích chuyên gia:</b>\n<i>{phan_tich}</i>\n\n"
-    msg += f"🔮 <b>Dự báo thị trường:</b>\n{du_bao}\n\n"
+    msg += f"📌 <b>Sự kiện chính</b>\n{su_kien}\n\n"
+    msg += f"🔗 <b>Chuỗi tác động vĩ mô</b>\n<i>{chuoi}</i>\n\n"
+    msg += f"📊 <b>Asset chịu tác động</b>\n"
+    msg += f"Tích cực:\n{tich_str}\n"
+    msg += f"Tiêu cực:\n{tieu_str}\n"
+    msg += f"Trung tính:\n{trung_str}\n\n"
+    msg += f"🔮 <b>Kịch bản thị trường</b>\n"
+    msg += f"<b>Kịch bản 1:</b> {kb1}\n"
+    msg += f"<b>Kịch bản 2:</b> {kb2}\n\n"
+    msg += f"🧠 <b>Góc nhìn chiến lược</b>\n<i>{goc}</i>\n\n"
     msg += f"🔗 <a href=\"{url}\">Đọc bài gốc</a> · 📡 {source} · 🕐 {hour:02d}:{minute:02d} (VN)"
     return msg
 
