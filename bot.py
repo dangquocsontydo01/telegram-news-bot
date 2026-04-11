@@ -179,8 +179,8 @@ PROMPT = """Bạn là CEO của quỹ đầu tư hàng chục nghìn tỷ USD, v
   "asset_tich_cuc": ["asset1", "asset2", "asset3"],
   "asset_tieu_cuc": ["asset1", "asset2", "asset3"],
   "asset_trung_tinh": ["asset1", "asset2"],
-  "kich_ban_1": "Kịch bản lạc quan 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu ghi xác suất dạng (65%)",
-  "kich_ban_2": "Kịch bản tiêu cực 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu ghi xác suất dạng (35%)",
+  "kich_ban_1": "Kịch bản lạc quan 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu tự đánh giá xác suất khách quan dựa trên bối cảnh tin tức, ghi dạng (XX%) — không được mặc định 65%",
+  "kich_ban_2": "Kịch bản tiêu cực 1-2 tuần tới: mô tả điều gì xảy ra và tác động đến vàng BTC SPX như thế nào. Cuối câu tự đánh giá xác suất khách quan, tổng 2 kịch bản phải bằng 100%, ghi dạng (XX%) — không được mặc định 35%",
   "goc_nhin": "1-2 câu nhận định chiến lược sắc bén, góc nhìn độc đáo của CEO quỹ đầu tư",
   "muc_do": "RẤT QUAN TRỌNG hoặc QUAN TRỌNG hoặc ĐÁNG CHÚ Ý"
 }}
