@@ -25,6 +25,16 @@ RSS_FEEDS = [
     {"name": "AP Top News",      "url": "https://rsshub.app/apnews/topics/ap-top-news",   "cat": "🌍 THẾ GIỚI"},
     {"name": "Financial Times",  "url": "https://www.ft.com/rss/home",                    "cat": "💹 TÀI CHÍNH"},
     {"name": "Bloomberg Mkts",   "url": "https://feeds.bloomberg.com/markets/news.rss",   "cat": "💹 TÀI CHÍNH"},
+    {"name": "VnExpress",     "url": "https://vnexpress.net/rss/kinh-doanh.rss",           "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "Tuoi Tre",      "url": "https://tuoitre.vn/rss/kinh-te.rss",                 "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "Dan Tri",       "url": "https://dantri.com.vn/kinh-doanh.rss",               "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "Zing News",     "url": "https://zingnews.vn/kinh-te.rss",                    "cat": "🇻🇳 VIỆT NAM"},
+    {"name": "CafeF",         "url": "https://cafef.vn/rss/thi-truong-chung-khoan.rss",    "cat": "📈 CHỨNG KHOÁN"},
+    {"name": "Vietstock",     "url": "https://vietstock.vn/rss/tai-chinh.rss",             "cat": "📈 CHỨNG KHOÁN"},
+    {"name": "Elon Musk",     "url": "https://nitter.poast.org/elonmusk/rss",              "cat": "🐦 TWITTER"},
+    {"name": "Jim Cramer",    "url": "https://nitter.poast.org/jimcramer/rss",             "cat": "🐦 TWITTER"},
+    {"name": "Cathie Wood",   "url": "https://nitter.poast.org/CathieDWood/rss",           "cat": "🐦 TWITTER"},
+    {"name": "Raoul Pal",     "url": "https://nitter.poast.org/RaoulGMI/rss",              "cat": "🐦 TWITTER"},
 ]
 
 KEYWORDS = [
