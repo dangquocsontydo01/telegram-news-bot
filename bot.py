@@ -106,7 +106,7 @@ def fetch_articles(posted: set) -> list[dict]:
 
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent?key={key}"
+    "gemini-2.0-flash:generateContent?key={key}"
 )
 
 PROMPT_TEMPLATE = """Bạn là biên tập viên kênh Telegram chuyên tài chính-kinh tế-địa chính trị.
