@@ -9,39 +9,46 @@ logger = logging.getLogger(__name__)
 TELEGRAM_TOKEN   = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHANNEL = os.environ["TELEGRAM_CHANNEL_ID"]
 POSTED_FILE      = Path("data/posted.json")
-MAX_POST         = int(os.environ.get("MAX_POST", "8"))
 
-RSS_FEEDS = [
-    # Quốc tế - có filter keyword
-    {"name": "Reuters World",    "url": "https://feeds.reuters.com/reuters/worldNews",           "cat": "🌍 THẾ GIỚI",    "filter": True},
-    {"name": "Reuters Business", "url": "https://feeds.reuters.com/reuters/businessNews",        "cat": "💹 TÀI CHÍNH",   "filter": True},
-    {"name": "BBC World",        "url": "http://feeds.bbci.co.uk/news/world/rss.xml",            "cat": "🌍 THẾ GIỚI",    "filter": True},
-    {"name": "CNBC",             "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "cat": "💹 TÀI CHÍNH",   "filter": True},
-    {"name": "Al Jazeera",       "url": "https://www.aljazeera.com/xml/rss/all.xml",             "cat": "🏛️ CHÍNH TRỊ",  "filter": True},
-    {"name": "AP Top News",      "url": "https://rsshub.app/apnews/topics/ap-top-news",          "cat": "🌍 THẾ GIỚI",    "filter": True},
-    {"name": "Financial Times",  "url": "https://www.ft.com/rss/home",                           "cat": "💹 TÀI CHÍNH",   "filter": True},
-    {"name": "Bloomberg Mkts",   "url": "https://feeds.bloomberg.com/markets/news.rss",          "cat": "💹 TÀI CHÍNH",   "filter": True},
-    # Việt Nam - không filter, đăng tất cả
-    {"name": "VnExpress",        "url": "https://vnexpress.net/rss/kinh-doanh.rss",              "cat": "🇻🇳 VIỆT NAM",   "filter": False},
-    {"name": "Tuoi Tre",         "url": "https://tuoitre.vn/rss/kinh-te.rss",                    "cat": "🇻🇳 VIỆT NAM",   "filter": False},
-    {"name": "Dan Tri",          "url": "https://dantri.com.vn/kinh-doanh.rss",                  "cat": "🇻🇳 VIỆT NAM",   "filter": False},
-    {"name": "Zing News",        "url": "https://zingnews.vn/kinh-te.rss",                       "cat": "🇻🇳 VIỆT NAM",   "filter": False},
-    {"name": "CafeF",            "url": "https://cafef.vn/rss/thi-truong-chung-khoan.rss",       "cat": "📈 CHỨNG KHOÁN", "filter": False},
-    {"name": "Vietstock",        "url": "https://vietstock.vn/rss/tai-chinh.rss",                "cat": "📈 CHỨNG KHOÁN", "filter": False},
-    # Twitter - không filter, đăng tất cả
-    {"name": "Donald Trump",     "url": "https://nitter.poast.org/realDonaldTrump/rss",          "cat": "🏛️ TRUMP",      "filter": False},
-    {"name": "Elon Musk",        "url": "https://nitter.poast.org/elonmusk/rss",                 "cat": "🐦 ELON MUSK",   "filter": False},
-    {"name": "Jim Cramer",       "url": "https://nitter.poast.org/jimcramer/rss",                "cat": "🐦 TWITTER",     "filter": False},
-    {"name": "Cathie Wood",      "url": "https://nitter.poast.org/CathieDWood/rss",              "cat": "🐦 TWITTER",     "filter": False},
-    {"name": "Raoul Pal",        "url": "https://nitter.poast.org/RaoulGMI/rss",                 "cat": "🐦 TWITTER",     "filter": False},
-    {"name": "Michael Saylor",   "url": "https://nitter.poast.org/saylor/rss",                   "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "CZ Binance",       "url": "https://nitter.poast.org/cz_binance/rss",               "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "Vitalik Buterin",  "url": "https://nitter.poast.org/VitalikButerin/rss",           "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "PlanB",            "url": "https://nitter.poast.org/100trillionUSD/rss",           "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "Pompliano",        "url": "https://nitter.poast.org/APompliano/rss",               "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "Altcoin Daily",    "url": "https://nitter.poast.org/AltcoinDailyio/rss",           "cat": "₿ CRYPTO",       "filter": False},
-    {"name": "Willy Woo",        "url": "https://nitter.poast.org/woonomic/rss",                 "cat": "₿ CRYPTO",       "filter": False},
-]
+# Số tin tối đa mỗi nhóm mỗi lần chạy
+MAX_INTL    = 3  # Quốc tế
+MAX_VN      = 3  # Việt Nam
+MAX_TWITTER = 2  # Twitter/KOLs
+
+RSS_FEEDS = {
+    "intl": [
+        {"name": "Reuters World",    "url": "https://feeds.reuters.com/reuters/worldNews",           "cat": "🌍 THẾ GIỚI"},
+        {"name": "Reuters Business", "url": "https://feeds.reuters.com/reuters/businessNews",        "cat": "💹 TÀI CHÍNH"},
+        {"name": "BBC World",        "url": "http://feeds.bbci.co.uk/news/world/rss.xml",            "cat": "🌍 THẾ GIỚI"},
+        {"name": "CNBC",             "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "cat": "💹 TÀI CHÍNH"},
+        {"name": "Al Jazeera",       "url": "https://www.aljazeera.com/xml/rss/all.xml",             "cat": "🏛️ CHÍNH TRỊ"},
+        {"name": "AP Top News",      "url": "https://rsshub.app/apnews/topics/ap-top-news",          "cat": "🌍 THẾ GIỚI"},
+        {"name": "Financial Times",  "url": "https://www.ft.com/rss/home",                           "cat": "💹 TÀI CHÍNH"},
+        {"name": "Bloomberg Mkts",   "url": "https://feeds.bloomberg.com/markets/news.rss",          "cat": "💹 TÀI CHÍNH"},
+    ],
+    "vn": [
+        {"name": "VnExpress",  "url": "https://vnexpress.net/rss/kinh-doanh.rss",        "cat": "🇻🇳 VIỆT NAM"},
+        {"name": "Tuoi Tre",   "url": "https://tuoitre.vn/rss/kinh-te.rss",              "cat": "🇻🇳 VIỆT NAM"},
+        {"name": "Dan Tri",    "url": "https://dantri.com.vn/kinh-doanh.rss",            "cat": "🇻🇳 VIỆT NAM"},
+        {"name": "Zing News",  "url": "https://zingnews.vn/kinh-te.rss",                 "cat": "🇻🇳 VIỆT NAM"},
+        {"name": "CafeF",      "url": "https://cafef.vn/rss/thi-truong-chung-khoan.rss", "cat": "📈 CHỨNG KHOÁN"},
+        {"name": "Vietstock",  "url": "https://vietstock.vn/rss/tai-chinh.rss",          "cat": "📈 CHỨNG KHOÁN"},
+    ],
+    "twitter": [
+        {"name": "Donald Trump",    "url": "https://nitter.poast.org/realDonaldTrump/rss",  "cat": "🏛️ TRUMP"},
+        {"name": "Elon Musk",       "url": "https://nitter.poast.org/elonmusk/rss",         "cat": "🐦 ELON MUSK"},
+        {"name": "Jim Cramer",      "url": "https://nitter.poast.org/jimcramer/rss",        "cat": "🐦 TWITTER"},
+        {"name": "Cathie Wood",     "url": "https://nitter.poast.org/CathieDWood/rss",     "cat": "🐦 TWITTER"},
+        {"name": "Raoul Pal",       "url": "https://nitter.poast.org/RaoulGMI/rss",        "cat": "🐦 TWITTER"},
+        {"name": "Michael Saylor",  "url": "https://nitter.poast.org/saylor/rss",          "cat": "₿ CRYPTO"},
+        {"name": "CZ Binance",      "url": "https://nitter.poast.org/cz_binance/rss",      "cat": "₿ CRYPTO"},
+        {"name": "Vitalik Buterin", "url": "https://nitter.poast.org/VitalikButerin/rss",  "cat": "₿ CRYPTO"},
+        {"name": "PlanB",           "url": "https://nitter.poast.org/100trillionUSD/rss",  "cat": "₿ CRYPTO"},
+        {"name": "Pompliano",       "url": "https://nitter.poast.org/APompliano/rss",      "cat": "₿ CRYPTO"},
+        {"name": "Altcoin Daily",   "url": "https://nitter.poast.org/AltcoinDailyio/rss", "cat": "₿ CRYPTO"},
+        {"name": "Willy Woo",       "url": "https://nitter.poast.org/woonomic/rss",        "cat": "₿ CRYPTO"},
+    ],
+}
 
 KEYWORDS_EN = [
     "fed", "federal reserve", "interest rate", "inflation", "gdp", "recession",
@@ -67,13 +74,15 @@ def save_posted(hashes: set):
 def url_hash(url: str) -> str:
     return hashlib.md5(url.encode()).hexdigest()[:12]
 
-def fetch_articles(posted: set) -> list:
+def fetch_group(feeds: list, posted: set, use_filter: bool, limit: int) -> list:
     articles = []
-    for feed in RSS_FEEDS:
+    for feed in feeds:
+        if len(articles) >= limit:
+            break
         try:
             logger.info(f"Fetching {feed['name']}...")
             parsed = feedparser.parse(feed["url"])
-            for entry in parsed.entries[:5]:
+            for entry in parsed.entries[:10]:
                 url     = entry.get("link", "").strip()
                 title   = entry.get("title", "").strip()
                 summary = entry.get("summary", entry.get("description", "")).strip()
@@ -81,8 +90,7 @@ def fetch_articles(posted: set) -> list:
                     continue
                 if url_hash(url) in posted:
                     continue
-                # Chỉ filter báo quốc tế
-                if feed["filter"]:
+                if use_filter:
                     text = (title + " " + summary).lower()
                     if any(k in text for k in SKIP_KEYWORDS):
                         continue
@@ -96,9 +104,10 @@ def fetch_articles(posted: set) -> list:
                     "cat":     feed["cat"],
                     "hash":    url_hash(url),
                 })
+                if len(articles) >= limit:
+                    break
         except Exception as e:
             logger.warning(f"Feed error {feed['name']}: {e}")
-    logger.info(f"Found {len(articles)} new relevant articles")
     return articles
 
 TG_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
@@ -133,17 +142,27 @@ def tg_post(text: str) -> bool:
 
 def main():
     logger.info("Starting bot")
-    posted   = load_posted()
-    articles = fetch_articles(posted)
-    if not articles:
+    posted = load_posted()
+
+    intl_articles    = fetch_group(RSS_FEEDS["intl"],    posted, use_filter=True,  limit=MAX_INTL)
+    vn_articles      = fetch_group(RSS_FEEDS["vn"],      posted, use_filter=False, limit=MAX_VN)
+    twitter_articles = fetch_group(RSS_FEEDS["twitter"], posted, use_filter=False, limit=MAX_TWITTER)
+
+    logger.info(f"Intl: {len(intl_articles)} | VN: {len(vn_articles)} | Twitter: {len(twitter_articles)}")
+
+    all_articles = intl_articles + vn_articles + twitter_articles
+
+    if not all_articles:
         logger.info("No new articles.")
         return
-    for article in articles[:MAX_POST]:
+
+    for article in all_articles:
         msg = format_message(article)
         if tg_post(msg):
-            logger.info(f"Posted: {article['title'][:60]}")
+            logger.info(f"Posted: [{article['source']}] {article['title'][:50]}")
             posted.add(article["hash"])
         time.sleep(3)
+
     save_posted(posted)
     logger.info("Done.")
 
