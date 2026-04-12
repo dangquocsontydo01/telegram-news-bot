@@ -78,6 +78,9 @@ def save_posted(hashes):
     recent = list(hashes)[-2000:]
     POSTED_FILE.write_text(json.dumps(recent), encoding="utf-8")
 
+def title_hash(title):
+    return hashlib.md5(title.lower().strip().encode()).hexdigest()[:12]
+
 def url_hash(url):
     return hashlib.md5(url.encode()).hexdigest()[:12]
 
@@ -149,7 +152,7 @@ def fetch_articles(posted):
                 summary = clean_html(entry.get("summary", entry.get("description", "")).strip())
                 if not url or not title:
                     continue
-                if url_hash(url) in posted:
+                if url_hash(url) in posted or title_hash(title) in posted:
                     continue
                 relevant, topic = is_relevant(title, summary)
                 if not relevant:
